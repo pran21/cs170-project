@@ -10,7 +10,11 @@ for i in range(V):
     for j in range(i + 1, V):
         length = randrange(100000) / 1000
         edge = (i, j, length)
-        edges.append(edge)
+        if j == i + 1 or j ==  i + randrange(V - i - 1):
+            edges.append(edge)
+        elif randrange(100000) % 2 == 0:
+            edges.append(edge)
+
 
 G.add_weighted_edges_from(edges)
 fileName = str(V) + '.in'
