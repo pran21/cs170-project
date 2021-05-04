@@ -17,7 +17,7 @@ def getEdgesInClique(clique, G):
     return edges
 
 def getMostImpactfulNode(G):
-    endNode = len(G.nodes) - 1
+    endNode = max(G.nodes)
     bestNode = (None, -1)
     for node in G.nodes:
         if node == 0 or node == endNode:
@@ -32,9 +32,8 @@ def getMostImpactfulNode(G):
     return bestNode[0]
 
 def getMostImpactfulEdge(combos, G):
-    endNode = len(G.nodes) - 1
+    endNode = max(G.nodes)
     bestEdge = (None, -1)
-    # print(combos)
     for edges in combos:
         newG = G.copy()
         for edge in edges:
@@ -43,6 +42,7 @@ def getMostImpactfulEdge(combos, G):
             if not nx.is_connected(newG):
                 newG.add_edge(edge[0], edge[1])
                 continue
+        
         dists, paths = nx.single_source_dijkstra(newG, 0)
         if dists[endNode] > bestEdge[1]:
             bestEdge = (edges, dists[endNode])
@@ -60,7 +60,7 @@ def solve(G):
     edges = []
     k = 15
     c = 1
-    endNode = len(G.nodes) - 1
+    endNode = max(G.nodes)
     newG = G.copy()
     edgeToKeep = []
 
@@ -119,15 +119,16 @@ def solve2(G):
     """
     cities = []
     edges = []
-    k = 15
-    c = 1
-    endNode = len(G.nodes) - 1
+    k = 50
+    c = 3
+    endNode = max(G.nodes)
     newG = G.copy()
 
     for _ in range(c):
-        bestNode = getMostImpactfulNode(newG)     
-        cities.append(bestNode)
-        newG.remove_node(bestNode)
+        bestNode = getMostImpactfulNode(newG)
+        if bestNode:
+            cities.append(bestNode)
+            newG.remove_node(bestNode)
 
     for _ in range(k):
         assert nx.is_connected(newG)
@@ -136,27 +137,23 @@ def solve2(G):
         edgeList = []
         for i in range(len(shortestPath) - 1):
             edgeList.append((shortestPath[i], shortestPath[i+1]))
-        print(edgeList)
-        edgeCombinations = list(it.combinations(edgeList, 2))
-        print("Number of combos: ", len(edgeCombinations))
+        edgeCombinations = list(it.combinations(edgeList, 1))
+        # if len(edgeList) > 1:
+        #     edgeCombinations = list(it.combinations(edgeList, 2))
+        # else:
+        #     edgeCombinations = list(it.combinations(edgeList, 1))
+        # print("Number of combos: ", len(edgeCombinations))
 
         bestCombination = getMostImpactfulEdge(edgeCombinations, newG)
-        print('best: ', bestCombination)
+        # print('best: ', bestCombination)
         if bestCombination:
             for edge in bestCombination:
-                if k == 0:
-                    break
                 if newG.has_edge(*edge):
-                    k -=1
                     edges.append(edge)
                     newG.remove_edge(edge[0], edge[1])
                 if not nx.is_connected(newG):
-                    # k += 1
                     edges.remove(edge)
                     newG.add_edge(edge[0], edge[1])
-                    edgeToKeep.append(edge)
-
-
     print('Cities: ', cities)
     print('Edges: ', edges)
     return cities, edges
@@ -172,22 +169,23 @@ def single_file(lol):
     # path = 'inputs/medium/medium-' + str(lol) +  '.in'
     # path = 'inputs/large/large-' + str(lol) +  '.in'
     G = read_input_file(path)
+    print(G.nodes)
     # c, k = solve2(G)
-    c, k = solve(G)
+    c, k = solve2(G)
     assert is_valid_solution(G, c, k)
     print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
     write_output_file(G, c, k, 'small-test.out')
 
 if __name__ == '__main__':
-    # single_file(2)
-    for i in range(21, 301):
+    # single_file(62)
+    for i in range(1, 301):
         print("INPUT: ", i)
-        path = 'inputs/small/small-' + str(i) + '.in'
+        path = 'inputs/medium/medium-' + str(i) + '.in'
         G = read_input_file(path)
         c, k = solve2(G)
         assert is_valid_solution(G, c, k)
         print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
-        output_path = 'outputs/small-' + str(i) + '.out'
+        output_path = 'outputs/medium-' + str(i) + '.out'
         write_output_file(G, c, k, output_path)
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
